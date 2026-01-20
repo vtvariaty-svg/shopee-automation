@@ -1,14 +1,15 @@
-import fetch from 'node-fetch';
-
-export async function shopeePost(url: string, body: unknown, headers: Record<string, string>) {
+export async function shopeePost(
+  url: string,
+  body: unknown,
+  headers: Record<string, string>
+) {
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...headers
     },
-    body: JSON.stringify(body),
-    timeout: 10000
+    body: JSON.stringify(body)
   });
 
   const text = await res.text();
