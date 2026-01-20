@@ -43,27 +43,36 @@ export async function updateOrderStateTx(params: {
   nowISO: string;
   needsReviewReason?: string | null;
 }) {
-  const { orderId, expectedStateVersion, fromState, toState, nowISO, needsReviewReason } = params;
+  const {
+    orderId,
+    expectedStateVersion,
+    fromState,
+    toState,
+    nowISO,
+    needsReviewReason
+  } = params;
 
   const acceptedAt = toState === 'ACCEPTED' ? nowISO : null;
   const shippedAt = toState === 'SHIPPED' ? nowISO : null;
   const deliveredAt = toState === 'DELIVERED' ? nowISO : null;
 
-  // Importante: UPDATE com state_version esperado (controle otimista)
   const res = await db.query(
     `
     UPDATE orders
     SET
-      state = $1,
+      state = $1::order_state,
       state_version = state_version + 1,
       accepted_at = COALESCE(accepted_at, $2),
       shipped_at = COALESCE(shipped_at, $3),
       delivered_at = COALESCE(delivered_at, $4),
-      needs_review_reason = CASE WHEN $1 = 'NEEDS_REVIEW' THEN $5 ELSE needs_review_reason END,
+      needs_review_reason = CASE
+        WHEN $1::order_state = 'NEEDS_REVIEW' THEN $5
+        ELSE needs_review_reason
+      END,
       updated_at = now()
     WHERE
       id = $6
-      AND state = $7
+      AND state = $7::order_state
       AND state_version = $8
     RETURNING id, state, state_version
     `,
